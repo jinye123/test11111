@@ -61,6 +61,7 @@ export function getUserBaknInfo(data) {
     return http.post('/uc/bankaccount/queryBankAccountById.aj', data)
 }
 
+
 //用户完善身份信息
 export function perfectUserInfo(data) {
     return http.post('/userInfo/modifyUserInfo.aj', data)
