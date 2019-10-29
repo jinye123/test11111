@@ -1,7 +1,7 @@
 import React,{Component} from 'react'
 import {Redirect} from 'react-router-dom'
 import memory from '../../utils/memory'
-console.log(memory);
+
 export default class Admin extends Component{
     render() {
         const user=memory.user;
