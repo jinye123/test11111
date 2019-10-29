@@ -6,6 +6,7 @@ import {
     Button,
     message
 } from 'antd';
+import {Redirect} from 'react-router-dom'
 import './login.less'
 import memory from '../../utils/memory'
 import storage from '../../utils/storage'
@@ -26,6 +27,10 @@ class Login extends Component {
 
     render() {
         const {getFieldDecorator} = this.props.form;
+        const user=memory.user;
+        if(user.username){
+            return <Redirect to='/' />
+        }
         return (
             <div className='login'>
                 <div className='login-header'>
