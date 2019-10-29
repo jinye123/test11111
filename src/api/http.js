@@ -1,64 +1,72 @@
 import axios from 'axios'
-import qs from 'qs'
+import { message } from 'antd';
 
+//设置请求的配置信息
 if (process.env.NODE_ENV === 'development') {
-    axios.defaults.baseURL = 'http://test.api.zhaoyifen.com/web.app';
-} else if (process.env.NODE_ENV === 'debug') {
-    axios.defaults.baseURL = 'https://app.api.zhaoyifen.com/web.app';
+    axios.defaults.baseURL = '/api';
 } else if (process.env.NODE_ENV === 'production') {
-    axios.defaults.baseURL = 'https://app.api.zhaoyifen.com/web.app';
+    axios.defaults.baseURL = '//agent.kongque360.com';
 }
-function checkStatus(response) {
-    if (response && (response.status === 200 || response.status === 304 || response.status === 400)) {
-        return response.data
+axios.defaults.responseType = 'json';
+axios.defaults.withCredentials= true;
+axios.defaults.transformRequest=[function(data) {
+    let param = '';
+    for ( const key in data ) {
+        if( data.hasOwnProperty(key) ) {
+            param += `${key}=${data[key]}&`;
+        }
     }
-    return {
-        status: -404,
-        msg: '请求出错'
-    }
-}
+    param = param.substr(0, param.length - 1 );
+    return param ? param : null;
+}];
 
-function checkCode(res) {
-    if (res.status === -404) {
-        alert(res.msg)
+//拦截响应请求，统一提示错误信息
+axios.interceptors.response.use(function (response) {
+    if (response.status >= 200 && response.status < 300 ) {
+        if (response.data.code === 1) {
+            return Promise.reject(response.data);
+        }else {
+            return response.data.data
+        }
     }
-    if (res.data && (!res.code)) {
-        alert(res.data.error_msg)
+}, function (err) {
+    if (err && err.response) {
+        err.msg = `连接出错(${err.response.status})!`;
+    }else{
+        err.msg = '连接服务器失败!'
     }
-    return res
-}
+    return Promise.reject(err);
+});
 
+
+//请求方式
 export default {
+
     post (url, data) {
-        return axios({
-            method: 'post',
-            url,
-            data: qs.stringify(data),
-            timeout: 20000,
-        }).then(
-            (response) => {
-                return checkStatus(response)
-            }
-        ).then(
-            (res) => {
-                return Promise.resolve(checkCode(res))
-            }
-        )
+        return new Promise((resolve,reject)=>{
+            axios({
+                method: 'post',
+                url,
+                data: data,
+            }).then(res => {
+                resolve(res)
+            }).catch(e=>{
+                message.error(e.msg);
+            })
+        })
     },
+
     get (url, params) {
-        return axios({
-            method: 'get',
-            url,
-            params,
-            timeout: 20000
-        }).then(
-            (response) => {
-                return checkStatus(response)
-            }
-        ).then(
-            (res) => {
-                return Promise.resolve(checkCode(res))
-            }
-        )
+        return new Promise((resolve,reject)=>{
+            axios({
+                method: 'get',
+                url,
+                params
+            }).then((res) => {
+                resolve(res)
+            }).catch(e=>{
+                message.error(e.msg);
+            })
+        })
     }
 }

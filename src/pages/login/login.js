@@ -3,10 +3,12 @@ import {
     Form,
     Icon,
     Input,
-    Button
+    Button,
+    message
 } from 'antd';
 import './login.less'
-import {setStorage} from '../../utils/utils'
+import memory from '../../utils/memory'
+import storage from '../../utils/storage'
 
 class Login extends Component {
 
@@ -14,10 +16,13 @@ class Login extends Component {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
             if (!err) {
-                setStorage('userInfo', JSON.stringify(values))
+                memory.user=values;
+                storage.saveUser(values);
+                message.success('登陆成功');
+                this.props.history.replace('/');
             }
         });
-    }
+    };
 
     render() {
         const {getFieldDecorator} = this.props.form;
