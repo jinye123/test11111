@@ -1,38 +1,67 @@
 import React, {Component} from 'react';
 import './index.less'
 import {Icon, Menu} from "antd";
+import {Link, withRouter} from 'react-router-dom'
+import menuConfig from '../../config/menuConfig'
 
 const {SubMenu} = Menu;
 
-export default class MenuWrap extends Component {
+class MenuWrap extends Component {
+    constructor(props){
+        super(props);
+        this.menuList = this.renderMenuNodes(menuConfig)
+    }
+    renderMenuNodes = (menuConfig) => {
+        const path = this.props.location.pathname;
+        return menuConfig.reduce((pre, item) => {
+            if (!item.children) {
+                pre.push((
+                    <Menu.Item key={item.key}>
+                        <Link to={item.key}>
+                            <Icon type={item.icon}/>
+                            <span>{item.name}</span>
+                        </Link>
+                    </Menu.Item>
+                ))
+            } else {
+                const openSub = item.children.find(item => item.key === path);
+                if (openSub) {
+                    this.openKey = item.key
+                }
+                pre.push((
+                    <SubMenu
+                        key={item.key}
+                        title={
+                            <span>
+                                <Icon type={item.icon}/>
+                                <span>{item.name}</span>
+                            </span>
+                        }>
+                        {
+                            this.renderMenuNodes(item.children)
+                        }
+                    </SubMenu>
+                ))
+            }
+
+            return pre
+        }, [])
+    };
+
     render() {
+        const path = this.props.location.pathname;
+        const openKey = this.openKey;
         return (
             <>
                 <div className="logo"/>
-                <Menu mode="inline" defaultSelectedKeys={['1']}>
-                    <Menu.Item key="1">
-                        <Icon type="pie-chart"/>
-                        <span>Option 1</span>
-                    </Menu.Item>
-                    <Menu.Item key="2">
-                        <Icon type="desktop"/>
-                        <span>Option 2</span>
-                    </Menu.Item>
-                    <SubMenu key="sub1" title={<span><Icon type="user"/><span>User</span></span>}>
-                        <Menu.Item key="3">Tom</Menu.Item>
-                        <Menu.Item key="4">Bill</Menu.Item>
-                        <Menu.Item key="5">Alex</Menu.Item>
-                    </SubMenu>
-                    <SubMenu key="sub2" title={<span><Icon type="team"/><span>Team</span></span>}>
-                        <Menu.Item key="6">Team 1</Menu.Item>
-                        <Menu.Item key="8">Team 2</Menu.Item>
-                    </SubMenu>
-                    <Menu.Item key="9">
-                        <Icon type="file"/>
-                        <span>File</span>
-                    </Menu.Item>
+                <Menu mode="inline" defaultOpenKeys={[openKey]} selectedKeys={[path]}>
+                    {
+                        this.menuList
+                    }
                 </Menu>
             </>
         );
     }
 }
+
+export default withRouter(MenuWrap)
