@@ -1,24 +1,33 @@
-import React, {Component} from 'react';
+import React, {useState,useEffect} from 'react';
 import {withRouter} from 'react-router-dom'
 import {Button, Modal} from 'antd'
 import memory from '../../utils/memory'
 import storage from '../../utils/storage'
 import date from '../../utils/date'
-import './index.less'
-
+import styles from  './index.module.less'
+console.log(styles)
 const DATE_TYPE = "YYYY-mm-dd HH:MM:SS";
 
 
-class Header extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            userInfo: memory.user,
-            currentTime: date.formatDate(DATE_TYPE, new Date())
+function Header (props){
+    const [intervalId,setIntervalId]=useState(null)
+    const [currentTime,setCurrentTime] =useState(date.formatDate(DATE_TYPE, new Date()))
+    useEffect(()=>{
+        getCurrentTime();
+        return ()=>{
+            clearInterval(intervalId)
         }
-    }
+    },[]);
 
-    logout = () => {
+    const getCurrentTime = () => {
+        const id=setInterval(() => {
+            const currentTime = date.formatDate(DATE_TYPE, new Date());
+            setCurrentTime(currentTime)
+        }, 1000);
+        setIntervalId(id)
+    };
+
+    const logout = () => {
         Modal.confirm({
             title: '确定退出吗？',
             centered: true,
@@ -27,35 +36,19 @@ class Header extends Component {
             onOk: () => {
                 storage.removeUser();
                 memory.user = {};
-                this.props.history.replace('/login');
+                props.history.replace('/login');
             }
         })
     };
 
-    getCurrentTime = () => {
-        this.intervalId = setInterval(() => {
-            const currentTime = date.formatDate(DATE_TYPE, new Date());
-            this.setState({currentTime})
-        }, 1000)
-    };
+    return (
+        <div className={[styles.header].join(' ')}>
+            {process.env.REACT_APP_VERSION}当前时间: <span className={styles["date-box"]}>{currentTime}</span>
+            欢迎 <span className={styles["user-box"]}>{memory.user.username}</span>
+            <Button onClick={logout} type="link">退出</Button>
+        </div>
+    );
 
-    componentDidMount() {
-        this.getCurrentTime()
-    }
-
-    componentWillUnmount() {
-        clearInterval(this.intervalId)
-    }
-
-    render() {
-        return (
-            <div className='header'>
-                当前时间: <span className='date-box'>{this.state.currentTime}</span>
-                欢迎 <span className='user-box'>{this.state.userInfo.username}</span>
-                <Button onClick={this.logout} type="link">退出</Button>
-            </div>
-        );
-    }
 }
 
 export default withRouter(Header)
